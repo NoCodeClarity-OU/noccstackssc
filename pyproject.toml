@@ -1,0 +1,20 @@
+[project]
+name = "noccstacksv2"
+version = "0.1.0"
+description = "noccstacksv2 using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<=3.13"
+dependencies = [
+    "crewai[tools]>=0.86.0,<1.0.0"
+]
+
+[project.scripts]
+noccstacksv2 = "noccstacksv2.main:run"
+run_crew = "noccstacksv2.main:run"
+train = "noccstacksv2.main:train"
+replay = "noccstacksv2.main:replay"
+test = "noccstacksv2.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

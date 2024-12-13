@@ -1,0 +1,50 @@
+analyze_project:
+  description: >
+    Analyze the project requirements for {project_name} with the following description:
+    {project_description}
+    Break down the requirements into specific smart contract features and functionality.
+    Consider security requirements, data structures, and contract interactions.
+  expected_output: >
+    A detailed analysis document containing:
+    1. List of required smart contract features
+    2. Data structures and their purposes
+    3. Security considerations
+    4. Contract interaction flow
+  agent: project_manager
+
+develop_smart_contract:
+  description: >
+    Using the analysis from the previous task, develop Clarity smart contracts for {project_name}.
+    Follow Clarity best practices and documentation from https://book.clarity-lang.org/.
+    Ensure proper error handling, security measures, and efficient data structures.
+    
+    Project Analysis Context:
+    {{analyze_project.output}}
+  expected_output: >
+    Complete Clarity smart contract code with:
+    1. Well-documented functions and data structures
+    2. Proper error handling
+    3. Security measures implementation
+    4. Optimization for gas efficiency
+  agent: smart_contract_developer
+  context: [analyze_project]
+
+create_tests:
+  description: >
+    Create comprehensive TypeScript test suite for the smart contracts developed in the previous task.
+    Cover all main functionality, edge cases, and security scenarios.
+    Include both unit tests and integration tests where appropriate.
+    
+    Project Analysis Context:
+    {{analyze_project.output}}
+    
+    Smart Contract Context:
+    {{develop_smart_contract.output}}
+  expected_output: >
+    Complete TypeScript test suite containing:
+    1. Unit tests for all contract functions
+    2. Integration tests for contract interactions
+    3. Edge case testing
+    4. Security scenario testing
+  agent: testing_agent
+  context: [analyze_project, develop_smart_contract]
