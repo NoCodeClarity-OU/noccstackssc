@@ -16,8 +16,8 @@ def run():
     Run the crew.
     """
     inputs = {
-        'project_name': 'Newsletter',
-        'project_description': 'Newsletter for the latest news and updates, built on top of stacks blockchain'
+        "project_name": "",
+        "project_description": ""
     }
     Noccstacksv2().crew().kickoff(inputs=inputs)
 
