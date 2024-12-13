@@ -1,5 +1,5 @@
 from crewai import Agent, Crew, Process, Task
-from crewai.project import CrewBase, agent, crew, task
+from crewai.project import CrewBase, agent, crew, task, before_kickoff
 from .tools.custom_tool import ClarityDocScraper, SmartContractGenerator, TestGenerator
 
 # If you want to run a snippet of code before or after the crew starts, 
@@ -9,6 +9,12 @@ from .tools.custom_tool import ClarityDocScraper, SmartContractGenerator, TestGe
 @CrewBase
 class Noccstacksv2():
 	"""Noccstacksv2 crew for developing Clarity smart contracts"""
+
+	# Add default inputs to handle missing input cases
+	default_inputs = {
+		"project_name": "Newsletter",
+		"project_description": "A decentralized newsletter platform built on Stacks blockchain that allows users to subscribe, publish content, and manage subscriptions. Features include subscription management, content publishing, payment handling, and governance features."
+	}
 
 	# Learn more about YAML configuration files here:
 	# Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
@@ -68,10 +74,21 @@ class Noccstacksv2():
 		# To learn how to add knowledge sources to your crew, check out the documentation:
 		# https://docs.crewai.com/concepts/knowledge#what-is-knowledge
 
-		return Crew(
-			agents=self.agents, # Automatically created by the @agent decorator
-			tasks=self.tasks, # Automatically created by the @task decorator
+		# Create crew with input handling
+		crew = Crew(
+			agents=self.agents,
+			tasks=self.tasks,
 			process=Process.sequential,
 			verbose=True,
-			# process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
 		)
+		
+		return crew
+
+	# Add before_kickoff decorator to handle input merging
+	@before_kickoff
+	def before_kickoff_function(self, inputs):
+		"""Merge default inputs with provided inputs"""
+		merged_inputs = self.default_inputs.copy()
+		if inputs:
+			merged_inputs.update(inputs)
+		return merged_inputs

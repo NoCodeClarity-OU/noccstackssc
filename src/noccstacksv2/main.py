@@ -16,8 +16,7 @@ def run():
     Run the crew.
     """
     inputs = {
-        "project_name": "",
-        "project_description": ""
+        "topic": "AI LLMs"
     }
     Noccstacksv2().crew().kickoff(inputs=inputs)
 

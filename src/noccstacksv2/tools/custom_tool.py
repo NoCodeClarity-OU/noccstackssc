@@ -59,6 +59,9 @@ class ClarityDocScraper(BaseTool):
                 except:
                     continue
             
+            if not results:
+                return json.dumps([{"type": "info", "content": "No specific documentation found for this topic."}])
+            
             return json.dumps(results, indent=2)
         except Exception as e:
             return json.dumps({"error": str(e)})
@@ -89,69 +92,78 @@ class SmartContractGenerator(BaseTool):
         functions: Optional[List[Dict[str, Any]]] = None,
         error_codes: Optional[List[Dict[str, str]]] = None
     ) -> str:
-        contract_parts = [
-            f";; {contract_name}",
-            ";; Generated smart contract based on Clarity documentation patterns",
-            ""
-        ]
+        try:
+            # Initialize empty lists if None is provided
+            data_vars = data_vars or []
+            maps = maps or []
+            functions = functions or []
+            error_codes = error_codes or []
+            
+            contract_parts = [
+                f";; {contract_name}",
+                ";; Generated smart contract based on Clarity documentation patterns",
+                ""
+            ]
 
-        # Add data vars
-        if data_vars:
-            contract_parts.extend([";; Data vars"])
-            for var in data_vars:
-                if not isinstance(var, dict) or 'name' not in var or 'type' not in var:
-                    continue
-                contract_parts.append(f"(define-data-var {var['name']} {var['type']} {var.get('initial', 'false')})")
-            contract_parts.append("")
+            # Add data vars
+            if data_vars:
+                contract_parts.extend([";; Data vars"])
+                for var in data_vars:
+                    if not isinstance(var, dict) or 'name' not in var or 'type' not in var:
+                        continue
+                    contract_parts.append(f"(define-data-var {var['name']} {var['type']} {var.get('initial', 'false')})")
+                contract_parts.append("")
 
-        # Add maps
-        if maps:
-            contract_parts.extend([";; Maps"])
-            for map_def in maps:
-                if not isinstance(map_def, dict) or 'name' not in map_def:
-                    continue
-                key_type = map_def.get('key_type', map_def.get('key', 'principal'))
-                value_type = map_def.get('value_type', map_def.get('value', 'bool'))
-                contract_parts.append(f"(define-map {map_def['name']} {key_type} {value_type})")
-            contract_parts.append("")
+            # Add maps
+            if maps:
+                contract_parts.extend([";; Maps"])
+                for map_def in maps:
+                    if not isinstance(map_def, dict) or 'name' not in map_def:
+                        continue
+                    key_type = map_def.get('key_type', map_def.get('key', 'principal'))
+                    value_type = map_def.get('value_type', map_def.get('value', 'bool'))
+                    contract_parts.append(f"(define-map {map_def['name']} {key_type} {value_type})")
+                contract_parts.append("")
 
-        # Add functions
-        if functions:
-            contract_parts.extend([";; Functions"])
-            for func in functions:
-                if not isinstance(func, dict) or 'name' not in func:
-                    continue
-                
-                # Handle both parameter formats
-                if 'parameters' in func:
-                    args_str = " ".join([f"({param['name']} {param['type']})" for param in func.get('parameters', [])])
-                elif 'args' in func:
-                    args_str = " ".join([f"({arg['name']} {arg['type']})" for arg in func.get('args', [])])
-                else:
-                    args_str = ""
-                
-                func_type = "define-read-only" if func.get('is_read_only', False) else "define-public"
-                body = func.get('body', '(ok true)')
-                
-                contract_parts.extend([
-                    f"(define-{func_type} ({func['name']} {args_str})",
-                    f"    {body}",
-                    ")",
-                    ""
-                ])
+            # Add functions
+            if functions:
+                contract_parts.extend([";; Functions"])
+                for func in functions:
+                    if not isinstance(func, dict) or 'name' not in func:
+                        continue
+                    
+                    # Handle both parameter formats
+                    if 'parameters' in func:
+                        args_str = " ".join([f"({param['name']} {param['type']})" for param in func.get('parameters', [])])
+                    elif 'args' in func:
+                        args_str = " ".join([f"({arg['name']} {arg['type']})" for arg in func.get('args', [])])
+                    else:
+                        args_str = ""
+                    
+                    func_type = "define-read-only" if func.get('is_read_only', False) else "define-public"
+                    body = func.get('body', '(ok true)')
+                    
+                    contract_parts.extend([
+                        f"(define-{func_type} ({func['name']} {args_str})",
+                        f"    {body}",
+                        ")",
+                        ""
+                    ])
 
-        # Add error codes
-        if error_codes:
-            contract_parts.extend([";; Error codes"])
-            for error in error_codes:
-                if not isinstance(error, dict) or 'name' not in error or 'code' not in error:
-                    continue
-                if 'message' in error:
-                    contract_parts.append(f";; {error['message']}")
-                contract_parts.append(f"(define-constant {error['name']} (err u{error['code']}))")
-            contract_parts.append("")
+            # Add error codes
+            if error_codes:
+                contract_parts.extend([";; Error codes"])
+                for error in error_codes:
+                    if not isinstance(error, dict) or 'name' not in error or 'code' not in error:
+                        continue
+                    if 'message' in error:
+                        contract_parts.append(f";; {error['message']}")
+                    contract_parts.append(f"(define-constant {error['name']} (err u{error['code']}))")
+                contract_parts.append("")
 
-        return "\n".join(contract_parts)
+            return "\n".join(contract_parts)
+        except Exception as e:
+            return f"Error generating contract: {str(e)}"
 
 class TestGeneratorInput(BaseModel):
     """Input schema for TestGenerator."""
